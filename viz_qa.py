@@ -235,7 +235,7 @@ def viz_qa(viz_id):
             i=0
             while i < len(response[error_type]):
                 if isinstance(response[error_type][i], list):
-                    error_message = ''.join(response[error_type][i])
+                    error_message = ', '.join(response[error_type][i])
                 else:
                     error_message = (response[error_type][i])
                 html_string = html_string + '<tr><td>' + error_type + '</td><td>' + error_message + '</td></tr>'
@@ -264,4 +264,4 @@ if __name__ == '__main__':
     # print check_source_text(make_soup(download_viz_html('7BIwkQt6Xpb')))
     # print value_labels(widgets_json(download_viz_html('idYAIsge8Z')))
     # print timeline_text(widgets_json(download_viz_html('kaK5wyyw5jn')))
-    print viz_qa('kaK5wyyw5jn')
+    print viz_qa('cI5o5J7ChJr')
