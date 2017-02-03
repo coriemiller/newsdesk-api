@@ -12,7 +12,10 @@ def source_listing_id(html):
     json_pattern = re.compile(r'FTB=(.*?})(;)')
     matches = json_pattern.findall(html)
     jsondata = json.loads(matches[0][0])
-    response_obj = jsondata['sources']
+    try:
+        response_obj = jsondata['sources']
+    except KeyError:
+        response_obj = {'source_ids': []}
     js = json.dumps(response_obj)
     resp = Response(js, status=200, mimetype='application/json')
     return resp
@@ -35,10 +38,10 @@ def make_soup(html):
 def test_update_date(soup):
     try:
         visible_date = soup.find("div", class_="ww-source").find("a").previous_sibling
+        string = visible_date.string.strip().replace('As of ', '').replace('.', '').replace(',', '').replace(' ', '')
     except AttributeError:
-        message = ['No update date or source']
+        message = ['No update date visible']
         return message
-    string = visible_date.string.strip().replace('As of ', '').replace('.', '').replace(',', '').replace(' ', '')
     try:
         datetime_object = datetime.strptime(string, '%B%d%Y')
     except ValueError:
@@ -197,33 +200,6 @@ def viz_qa(viz_id):
         # resp = Response(js, status=200, mimetype='application/json')
         # return resp
         html_string = '''
-        <!doctype html>
-        <title>Q/A</title>
-        <style>
-        table {
-        margin: auto;
-        margin-top: 30px;
-        color: #333;
-        font-family: monospace;
-        width: 640px;
-        border-collapse:
-        collapse; border-spacing: 0;
-        }
-
-        td, th { border: 1px solid #CCC; height: 30px; }
-
-        th {
-        background: #F3F3F3;
-        font-weight: bold;
-        text-align: left;
-        padding: 5px;
-        }
-
-        td {
-        background: #FAFAFA;
-        padding: 5px;
-        }
-        </style>
         <table>
         <tr>
             <th>Error Type</th>
