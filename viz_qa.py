@@ -66,7 +66,7 @@ def test_update_date(soup):
 
 def textgears_check(text):
     clean_text = re.sub(r'<.*\\?>', '', text)
-    url = 'http://api.textgears.com/check.php?text=' + clean_text.replace('"', '') + '&key=NmN7OLAGeZtPRboc'
+    url = 'http://api.textgears.com/check.php?text=' + clean_text.replace('"', '') + '&key=[key]'
     r = requests.get(url)
     results = r.json()
     i = 0
