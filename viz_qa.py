@@ -9,6 +9,7 @@ from datetime import datetime
 # BAD but disables warnings from unidecode
 import warnings
 import sys
+from textgears_key import KEY
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -94,7 +95,8 @@ def test_update_date(soup):
 
 def textgears_check(text):
     clean_text = re.sub(r'<.*\\?>', '', text)
-    url = 'http://api.textgears.com/check.php?text=' + unidecode(clean_text.replace('"', '').replace('&', '%26')) + '&key=NmN7OLAGeZtPRboc'
+    # url = 'http://api.textgears.com/check.php?text=' + unidecode(clean_text.replace('"', '').replace('&', '%26')) + '&key=NmN7OLAGeZtPRboc'
+    url = 'http://api.textgears.com/check.php?text=' + clean_text.replace('"', '') + '&key=' + KEY
     r = requests.get(url)
     results = r.json()
     i = 0
@@ -292,4 +294,4 @@ if __name__ == '__main__':
     # acHbvVSsqS9 - title = Inaguration is happebing today
     # print check_source_text(make_soup(download_viz_html('7BIwkQt6Xpb')))
     # print value_labels(widgets_json(download_viz_html('idYAIsge8Z')))
-    print timeline_text(widgets_json(download_viz_html('kaK5wyyw5jn')))
+    print textgears_check('here is my text')
