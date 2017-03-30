@@ -1,0 +1,87 @@
+<!doctype html>
+<head>
+<title>Digest Builder</title>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<style>
+    body {
+    background: url("{{ bkgd_url }}") no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    }
+    a {
+    text-decoration: underline;
+    color: #1155CC;
+    }
+    h1 {
+    background: white;
+    padding: 10px;
+    max-width: 300px;
+    margin: auto;
+    }
+    .container {
+    text-align: center;
+    margin: auto;
+    display: block;
+    padding: 30px;
+    }
+    .message {
+    text-align: left;
+    border-style: dashed;
+    padding: 30px;
+    margin: auto;
+    max-width: 60%;
+    font-family: sans-serif;
+    font-size: 13px;
+    }
+    form {
+        display: inline-block;
+        left-margin: auto;
+        right-margin: auto;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+    <h1>Digest Builder</h1>
+    <form role="form" method='POST' action='/digest'>
+        <div class="row form-group">
+             <div class="col-md-3">
+                  <br>
+                  <input value="{{ request.form['headline_1'] }}" type="text" name="headline_1" class="form-control" placeholder="Headline 1" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['viz_image_1'] }}" type="text" name="viz_image_1" class="form-control" placeholder="Viz 1" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['backlink_1'] }}" type="text" name="backlink_1" class="form-control" placeholder="Link 1" style="max-width: 500px;" autofocus>
+            </div>
+             <div class="col-md-3">
+                  <br>
+                  <input value="{{ request.form['headline_2'] }}" type="text" name="headline_2" class="form-control" placeholder="Headline 2" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['viz_image_2'] }}" type="text" name="viz_image_2" class="form-control" placeholder="Viz 2" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['backlink_2'] }}" type="text" name="backlink_2" class="form-control" placeholder="Link 2" style="max-width: 500px;" autofocus>
+            </div>
+             <div class="col-md-3">
+                  <br>
+                  <input value="{{ request.form['headline_3'] }}" type="text" name="headline_3" class="form-control" placeholder="Headline 3" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['viz_image_3'] }}" type="text" name="viz_image_3" class="form-control" placeholder="Viz 3" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['backlink_3'] }}" type="text" name="backlink_3" class="form-control" placeholder="Link 3" style="max-width: 500px;" autofocus>
+            </div>
+             <div class="col-md-3">
+                  <br>
+                  <input value="{{ request.form['headline_4'] }}" type="text" name="headline_4" class="form-control" placeholder="Headline 4" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['viz_image_4'] }}" type="text" name="viz_image_4" class="form-control" placeholder="Viz 4" style="max-width: 500px;" autofocus>
+                  <br>
+                  <input value="{{ request.form['backlink_4'] }}" type="text" name="backlink_4" class="form-control" placeholder="Link 4" style="max-width: 500px;" autofocus>
+            </div>
+        </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+    </form>
+</div>
+{% block body %}{% endblock %}
+</body>

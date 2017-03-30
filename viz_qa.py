@@ -1,11 +1,39 @@
+import urllib
+from unidecode import unidecode
 import requests
 import re
 import json
 from flask import Response
 from bs4 import BeautifulSoup
 from datetime import datetime
+# BAD but disables warnings from unidecode
+import warnings
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+warnings.filterwarnings("ignore")
 
 requests.packages.urllib3.disable_warnings()
+
+
+def get_url_from_code(code):
+    viz_url = ''
+    json_pat = re.compile(r'data-widget-id="(\w*)"|\/w\/(.*?)"')
+    matches = json_pat.findall(code)
+    for vizid in matches[0]:
+        if vizid != '':
+            viz_url = 'https://w.graphiq.com/w/' + vizid
+    return viz_url
+
+
+def get_title(url):
+    json_pat = re.compile(r'(.*.com\/w\/|.*\/preview\/)(\w*)')
+    matches = json_pat.findall(url)
+    viz_id = matches[0][1]
+    soup = make_soup(download_viz_html(viz_id))
+    title = soup.find("title").string.strip()
+    return title
 
 
 def source_listing_id(html):
@@ -31,14 +59,14 @@ def download_viz_html(viz_id):
 
 
 def make_soup(html):
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html.replace('&nbsp;', ' '), 'html.parser')
     return soup
 
 
 def test_update_date(soup):
     try:
         visible_date = soup.find("div", class_="ww-source").find("a").previous_sibling
-        string = visible_date.string.strip().replace('As of ', '').replace('.', '').replace(',', '').replace(' ', '')
+        string = re.sub(';.*', '', visible_date.string.strip().replace('As of ', '').replace('.', '').replace(',', '').replace(' ', ''))
     except AttributeError:
         message = ['No update date visible']
         return message
@@ -66,21 +94,24 @@ def test_update_date(soup):
 
 def textgears_check(text):
     clean_text = re.sub(r'<.*\\?>', '', text)
-    url = 'http://api.textgears.com/check.php?text=' + clean_text.replace('"', '') + '&key=NmN7OLAGeZtPRboc'
+    url = 'http://api.textgears.com/check.php?text=' + unidecode(clean_text.replace('"', '').replace('&', '%26')) + '&key=NmN7OLAGeZtPRboc'
     r = requests.get(url)
     results = r.json()
     i = 0
     message = []
-    if results['score'] != 100:
-        while i < len(results['errors']):
-            bad = results['errors'][i]['bad']
-            fix = results['errors'][i]['better']
-            # check for dumb corrections that just add a space out front
-            if bad != ''.join(fix).replace(' ', ''):
-                message.append(bad + ' -> ' + ', '.join(fix))
-            i += 1
-    else:
-        message='good'
+    try:
+        if results['score'] != 100:
+            while i < len(results['errors']):
+                bad = results['errors'][i]['bad']
+                fix = results['errors'][i]['better']
+                # check for dumb corrections that just add a space out front
+                if bad != ''.join(fix).replace(' ', '') and bad != '"':
+                    message.append(bad + ' -> ' + ', '.join(fix))
+                i += 1
+        else:
+            message='good'
+    except:
+        message = 'good'
     return message
 
 
@@ -96,6 +127,7 @@ def check_subheader(soup):
     except AttributeError:
         return 'good'
 
+
 def check_source_text(soup):
     sources = soup.find_all("div", class_="dsrc-desc")
     messages = []
@@ -105,11 +137,13 @@ def check_source_text(soup):
             messages.append(message)
     return messages
 
+
 def widgets_json(html):
     json_pattern = re.compile(r'widgets=(.*?})(;)')
     matches = json_pattern.findall(html)
     jsondata = json.loads(matches[0][0])
     return jsondata
+
 
 def timeline_text(widgets_json):
     i = 0
@@ -138,7 +172,7 @@ def static_annotations(widgets_json):
         try:
             annotations_iterable = widgets_json[randomvalue]['options']['chart']['staticAnnotations']
             while i < len(annotations_iterable):
-                text = annotations_iterable[i]['text']
+                text = str(annotations_iterable[i]['text'])
                 message = textgears_check(text)
                 i += 1
                 if message != 'good':
@@ -146,6 +180,7 @@ def static_annotations(widgets_json):
         except KeyError:
             continue
     return messages
+
 
 def value_labels(widgets_json):
     i = 0
@@ -162,6 +197,24 @@ def value_labels(widgets_json):
         except KeyError:
             continue
     return messages
+
+
+def field_defs(widgets_json):
+    messages = []
+    for randomvalue in widgets_json:
+        try:
+            defs = widgets_json[randomvalue]['srp_data']['defs']
+            for item in defs:
+                if bool(item) != False:
+                    label = item['name']
+                    if label != 'ID' and label != '':
+                        message = textgears_check(label)
+                        if message != 'good':
+                            messages.append(message)
+        except TypeError:
+            continue
+    return messages
+
 
 def viz_qa(viz_id):
     response = {}
@@ -181,13 +234,13 @@ def viz_qa(viz_id):
         response["title"] = title_message
     if subheader_message != 'good':
         response["subheader"] = subheader_message
-    if bool(source_text_message) != False:
+    if bool(source_text_message):
         response["source_text"] = source_text_message
-    if bool(static_annotations_message) != False:
+    if bool(static_annotations_message):
         response["static_annotations"] = static_annotations_message
-    if bool(value_labels_message) != False:
+    if bool(value_labels_message):
         response["legend"] = value_labels_message
-    if bool(timeline_message) != False:
+    if bool(timeline_message):
         i = 1
         for slide in timeline_message:
             response_label = 'Timeline slide ' + str(i)
@@ -195,7 +248,7 @@ def viz_qa(viz_id):
             if ''.join(slide) != 'good' and bool(slide) != False:
                 response[response_label] = slide
             i += 1
-    if bool(response) != False:
+    if bool(response):
         # js = json.dumps(response)
         # resp = Response(js, status=200, mimetype='application/json')
         # return resp
@@ -239,5 +292,4 @@ if __name__ == '__main__':
     # acHbvVSsqS9 - title = Inaguration is happebing today
     # print check_source_text(make_soup(download_viz_html('7BIwkQt6Xpb')))
     # print value_labels(widgets_json(download_viz_html('idYAIsge8Z')))
-    # print timeline_text(widgets_json(download_viz_html('kaK5wyyw5jn')))
-    print viz_qa('cI5o5J7ChJr')
+    print timeline_text(widgets_json(download_viz_html('kaK5wyyw5jn')))
